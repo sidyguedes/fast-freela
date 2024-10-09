@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  app:
+    image: php:8.3-fpm
+    container_name: fast-freela-app
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+    networks:
+      - laravel
+    depends_on:
+      - mysql
+      - redis
+
+  nginx:
+    image: nginx:alpine
+    container_name: fast-freela-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - laravel
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    container_name: fast-freela-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - laravel
+
+  redis:
+    image: redis:alpine
+    container_name: fast-freela-redis
+    ports:
+      - "6380:6379"
+    networks:
+      - laravel
+
+networks:
+  laravel:
+    driver: bridge
+
+volumes:
+  mysql-data:
